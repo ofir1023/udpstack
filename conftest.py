@@ -3,7 +3,7 @@ sys.path.append('..')
 
 
 import pytest
-from network_adapter import MockNetworkAdapter
+from test.network_adapter import MockNetworkAdapter
 
 
 @pytest.fixture()
