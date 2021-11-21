@@ -82,8 +82,7 @@ class NetworkStack(TaskCreator):
         packet = b''
         protocol_node = self._protocols.get_node(top_protocol)
         while protocol_node is not None:
-            layer = await protocol_node.data.build(adapter, options)
-            packet = layer + packet
+            packet = await protocol_node.data.build(adapter, packet, options)
             options['previous_protocol_id'] = protocol_node.data.PROTOCOL_ID
             protocol_node = self._protocols.parent(protocol_node.identifier)
 

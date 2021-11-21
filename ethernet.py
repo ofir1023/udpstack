@@ -39,7 +39,7 @@ class Ethernet(Protocol):
     def parse_mac(mac: bytes) -> str:
         return ':'.join(hex(part)[2:].zfill(2) for part in mac)
 
-    async def build(self, adapter: NetworkAdapterInterface, options) -> bytes:
+    async def build(self, adapter: NetworkAdapterInterface, packet: bytes,  options) -> bytes:
         dst_mac = options.get('dst_mac')
         if dst_mac is None:
             assert self._mac_resolver is not None, 'mac resolver is not set and got a packet without destination mac'
@@ -51,7 +51,8 @@ class Ethernet(Protocol):
         previous_protocol_id = options.get('previous_protocol_id')
         assert previous_protocol_id, "Ethernet can't be top protocol"
         src_mac = self.build_mac(adapter.mac)
-        return dst_mac + src_mac + self._PROTOCOL_ID_STRUCT.pack(previous_protocol_id)
+        ethernet_header = dst_mac + src_mac + self._PROTOCOL_ID_STRUCT.pack(previous_protocol_id)
+        return ethernet_header + packet
 
     async def handle(self, packet: bytes, adapter: NetworkAdapterInterface, packet_description: dict) \
             -> Optional[Tuple[bytes, int]]:

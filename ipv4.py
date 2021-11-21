@@ -21,7 +21,7 @@ class IPv4(Protocol):
     def parse_ip(ip: bytes) -> str:
         return '.'.join(str(part) for part in ip)
 
-    async def build(self, adapter: NetworkAdapterInterface, options) -> bytes:
+    async def build(self, adapter: NetworkAdapterInterface, packet: bytes, options) -> bytes:
         # TODO
         pass
 

@@ -23,7 +23,9 @@ class ARP(Protocol, MacResolverInterface):
         self._arp_tables = {}
         Ethernet.set_mac_resolver(self)
 
-    async def build(self, adapter: NetworkAdapterInterface, options) -> bytes:
+    async def build(self, adapter: NetworkAdapterInterface, packet: bytes, options) -> bytes:
+        assert packet == b'', 'packet given to arp layer should be empty'
+
         arp_opcode = options['arp_opcode']
         dst_ip = options['dst_ip']
         if arp_opcode == self.REPLY_OPCODE:
@@ -34,7 +36,7 @@ class ARP(Protocol, MacResolverInterface):
             dst_mac = consts.BROADCAST_MAC
         options['dst_mac'] = dst_mac  # hint for ethernet layer
 
-        packet = self.PROTOCOL_STRUCT.pack(self.ETHERNET_ID, IPv4.PROTOCOL_ID, Ethernet.MAC_LENGTH, IPv4.ADDRESS_LENGTH,
+        packet += self.PROTOCOL_STRUCT.pack(self.ETHERNET_ID, IPv4.PROTOCOL_ID, Ethernet.MAC_LENGTH, IPv4.ADDRESS_LENGTH,
                                            arp_opcode)
         packet += Ethernet.build_mac(adapter.mac)
         packet += IPv4.build_ip(adapter.ip)
