@@ -12,7 +12,7 @@ class IPv4(Protocol):
     VERSION = 4
     HEADER_LENGTH = 5
     TTL = 128
-    PROTOCOL_STRUCT = struct.Struct('>BBHHHBB')
+    PROTOCOL_STRUCT = struct.Struct('>BBHHHBBHII')
 
     ADDRESS_LENGTH = 4
 
@@ -29,7 +29,7 @@ class IPv4(Protocol):
     def calculate_checksum(header: bytes) -> bytes:
         s = 0
         for i in range(0, len(header), 2):
-            w = header[i] + (header[i+1] << 8)
+            w = header[i+1] + (header[i] << 8)
             c = s + w
             s = (c & 0xffff) + (c >> 16)
         return ~s & 0xffff
