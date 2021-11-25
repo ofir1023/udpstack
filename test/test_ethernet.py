@@ -4,15 +4,16 @@ import pytest
 from stack import stack, NetworkAdapterInterface
 from ethernet import Ethernet, MacResolverInterface
 from network_adapter import MockNetworkAdapter
+from ip_utils import IPAddress
 
 
-TEST_DST_IP = '1.1.1.1'
+TEST_DST_IP = IPAddress('1.1.1.1')
 TEST_DST_MAC = 'aa:aa:aa:aa:aa:aa'
 TEST_PREVIOUS_ID = 0x2000
 
 
 class MockMacResolver(MacResolverInterface):
-    async def get_mac(self, adapter: NetworkAdapterInterface, dst_ip: str) -> str:
+    async def get_mac(self, adapter: NetworkAdapterInterface, dst_ip: IPAddress) -> str:
         assert dst_ip == TEST_DST_IP
         return TEST_DST_MAC
 

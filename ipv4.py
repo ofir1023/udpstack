@@ -1,11 +1,11 @@
-from typing import Optional, Tuple, Type
+from typing import Optional, Tuple
 import struct
 from io import BytesIO
-import ipaddress
 
-from stack import NetworkAdapterInterface, ProtocolInterface
+from ip_utils import IPAddress
+from stack import NetworkAdapterInterface
 from protocol import Protocol
-from ethernet import Ethernet, MacResolverInterface
+from ethernet import Ethernet
 
 
 class IPv4(Protocol):
@@ -16,27 +16,8 @@ class IPv4(Protocol):
     TTL = 128
     PROTOCOL_STRUCT = struct.Struct('>BBHHHBBHII')
 
-    ADDRESS_LENGTH = 4
-
     @staticmethod
-    def build_ip(ip: str) -> bytes:
-        assert len(ip.split('.')) == IPv4.ADDRESS_LENGTH
-        return bytes(map(int, ip.split('.')))
-
-    @staticmethod
-    def parse_ip(ip: bytes) -> str:
-        return '.'.join(str(part) for part in ip)
-
-    @staticmethod
-    def encode_ip(ip: str) -> int:
-        return int(ipaddress.IPv4Address(ip))
-
-    @staticmethod
-    def decode_ip(ip: int) -> str:
-        return str(ipaddress.IPv4Address(ip))
-
-    @staticmethod
-    def calculate_checksum(header: bytes) -> bytes:
+    def calculate_checksum(header: bytes) -> int:
         s = 0
         for i in range(0, len(header), 2):
             w = header[i+1] + (header[i] << 8)
@@ -44,11 +25,11 @@ class IPv4(Protocol):
             s = (c & 0xffff) + (c >> 16)
         return ~s & 0xffff
 
-
     async def build(self, adapter: NetworkAdapterInterface, packet: bytes, options) -> bytes:
         ip_header = self.PROTOCOL_STRUCT.pack(
             (self.VERSION << 4) + self.HEADER_LENGTH, 0, len(packet) + self.HEADER_LENGTH * 4, 
-            0, 0, self.TTL, options['protocol'], 0, IPv4.encode_ip(adapter.ip), IPv4.encode_ip(options['dst_ip']))
+            0, 0, self.TTL, options['previous_protocol_id'], 0, int(adapter.ip),
+            int(IPAddress(options['dst_ip'])))
         checksum = IPv4.calculate_checksum(ip_header)
         ip_header = ip_header[:10] + struct.pack('>H', checksum) + ip_header[12:]  # insert real checksum
         return ip_header + packet
@@ -67,8 +48,8 @@ class IPv4(Protocol):
                 or flags_and_fragment_offset != 0:
             return None
 
-        src_ip = IPv4.decode_ip(src_ip)
-        dst_ip = IPv4.decode_ip(dst_ip)
+        src_ip = IPAddress(src_ip)
+        dst_ip = IPAddress(dst_ip)
 
         if dst_ip != adapter.ip:
             return None

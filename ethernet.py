@@ -5,7 +5,8 @@ import codecs
 
 import consts
 from protocol import Protocol
-from stack import NetworkAdapterInterface, ProtocolInterface
+from stack import NetworkAdapterInterface
+from ip_utils import IPAddress
 
 
 class MacResolverInterface(abc.ABC):
@@ -13,7 +14,7 @@ class MacResolverInterface(abc.ABC):
     mac resolver for ethernet protocol
     can be for example arp for ipv4 or Neighbor Solicitation for ipv6
     """
-    async def get_mac(self, adapter: NetworkAdapterInterface, dst_ip: str) -> str:
+    async def get_mac(self, adapter: NetworkAdapterInterface, dst_ip: IPAddress) -> str:
         """
         find the mac for the given ip
         """

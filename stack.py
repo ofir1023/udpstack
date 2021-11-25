@@ -1,37 +1,10 @@
 from __future__ import annotations
 import abc
-from typing import Optional, Tuple, Type
-from asyncio import Queue
+from typing import Optional, Tuple, Type, List
 from treelib import Tree
 
+from adapter import NetworkAdapterInterface
 from task_creator import TaskCreator
-
-
-class NetworkAdapterInterface(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def mac(self) -> str:
-        """
-        the mac of the adapter
-        :return:
-        """
-        pass
-
-    @property
-    @abc.abstractmethod
-    def ip(self) -> str:
-        """
-        the ip of the adapter
-        """
-        pass
-
-    @abc.abstractmethod
-    async def send(self, packet: bytes):
-        """
-        send packet through the adapter
-        :param packet: the packet to send
-        """
-        pass
 
 
 class ProtocolInterface(abc.ABC):
@@ -40,10 +13,11 @@ class ProtocolInterface(abc.ABC):
     NEXT_PROTOCOL = None
 
     @abc.abstractmethod
-    async def build(self, adapter: NetworkAdapterInterface, options: dict) -> bytes:
+    async def build(self, adapter: NetworkAdapterInterface, packet: bytes, options: dict) -> bytes:
         """
         build the struct of the protocol
         :param adapter: the adapter in which the packet will be sent
+        :param packet: the packet that was built by previous protocols
         :param options: options about what to build
         :return: built protocol structure
         """
@@ -66,6 +40,13 @@ class ProtocolInterface(abc.ABC):
 
 class NetworkStack(TaskCreator):
     _protocols = Tree()
+
+    def __init__(self):
+        self._adapters = []  # type: List[NetworkAdapterInterface]
+        super().__init__()
+
+    def add_adapter(self, adapter: NetworkAdapterInterface):
+        self._adapters.append(adapter)
 
     @classmethod
     def register_protocol(cls, protocol: Type[ProtocolInterface]):

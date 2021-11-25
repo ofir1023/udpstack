@@ -4,14 +4,15 @@ import asyncio
 
 from stack import stack
 from ipv4 import IPv4
-from ethernet import Ethernet
 from network_adapter import MockNetworkAdapter
-import consts
+from ip_utils import IPAddress
 
-TEST_DST_IP = '1.1.1.1'
+
+TEST_DST_IP = IPAddress('1.1.1.1')
 TEST_DST_MAC = 'aa:aa:aa:aa:aa:aa'
 TEST_PREVIOUS_ID = 123
 TEST_PAYLOAD = b'abcde'
+
 
 def assert_packet(packet: bytes, adapter: MockNetworkAdapter):
     packet = Ether(packet)
@@ -25,6 +26,7 @@ def assert_packet(packet: bytes, adapter: MockNetworkAdapter):
     assert ip.src == adapter.ip
     assert ip.dst == TEST_DST_IP
 
+
 def assert_received_packet(packet: bytes, adapter: MockNetworkAdapter):
     packet = Ether(packet)
     assert packet.layers() == [Ether, IP]
@@ -37,14 +39,16 @@ def assert_received_packet(packet: bytes, adapter: MockNetworkAdapter):
     assert ip.src == TEST_DST_IP
     assert ip.dst == adapter.ip
 
+
 @pytest.mark.asyncio
 async def test_send(adapter: MockNetworkAdapter):
-    await stack.send(IPv4, adapter, dst_ip=TEST_DST_IP, protocol=123, dst_mac=TEST_DST_MAC)
+    await stack.send(IPv4, adapter, dst_ip=str(TEST_DST_IP), previous_protocol_id=TEST_PREVIOUS_ID, dst_mac=TEST_DST_MAC)
     assert_packet(adapter.get_next_packet_nowait(), adapter)
+
 
 @pytest.mark.asyncio
 async def test_handle(adapter: MockNetworkAdapter):
-    ip = IP(src=TEST_DST_IP, dst=adapter.ip, proto=TEST_PREVIOUS_ID)
+    ip = IP(src=str(TEST_DST_IP), dst=str(adapter.ip), proto=TEST_PREVIOUS_ID)
     packet = ip / TEST_PAYLOAD
     description = {}
     rest_of_packet, prev_id = await IPv4().handle(packet.build(), adapter, description)

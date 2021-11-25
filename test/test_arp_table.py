@@ -3,8 +3,9 @@ from inspect import iscoroutine
 from time import sleep
 
 from arp_table import ARPTable, ARPEntry
+from ip_utils import IPAddress
 
-TEST_IP = '1.1.1.1'
+TEST_IP = IPAddress('1.1.1.1')
 TEST_MAC = '01:23:45:67:89:ab'
 BAD_MAC = '00:00:00:00:00:00'
 

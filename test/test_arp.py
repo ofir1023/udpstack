@@ -7,9 +7,10 @@ from arp import ARP
 from ethernet import Ethernet
 from network_adapter import MockNetworkAdapter
 import consts
+from ip_utils import IPAddress
 
 
-TEST_DST_IP = '1.1.1.1'
+TEST_DST_IP = IPAddress('1.1.1.1')
 TEST_DST_MAC = 'aa:aa:aa:aa:aa:aa'
 
 

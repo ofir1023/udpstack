@@ -1,5 +1,6 @@
 import time
 from asyncio import Event
+from ip_utils import IPAddress
 
 
 class ARPEntry:
@@ -32,13 +33,13 @@ class ARPTable:
     def __init__(self):
         self.table = {}
 
-    def _get_entry(self, ip: str):
-        return self.table.setdefault(ip, ARPEntry())
+    def _get_entry(self, ip: IPAddress):
+        return self.table.setdefault(str(ip), ARPEntry())
 
-    def update(self, ip: str, mac: str):
+    def update(self, ip: IPAddress, mac: str):
         self._get_entry(ip).update(mac)
 
-    def get_mac(self, ip: str):
+    def get_mac(self, ip: IPAddress):
         entry = self._get_entry(ip)
         mac = entry.get_mac()
         if mac is not None:
