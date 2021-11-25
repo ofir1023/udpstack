@@ -92,3 +92,16 @@ def test_no_route():
         pass
     else:
         assert False, 'how did it find a route'
+
+
+def test_remove_adapter():
+    table = RouteTable()
+
+    adapter1 = NetworkAdapter('1.1.1.1', '255.255.0.0', '1.1.1.2')
+    table.add_adapter(adapter1)
+
+    adapter2 = NetworkAdapter('1.1.1.1', '255.255.255.0', '1.1.1.2')
+    table.add_adapter(adapter2)
+    table.remove_adapter(adapter2)
+
+    assert table.route(IPAddress('1.1.1.2')) == (adapter1, None)

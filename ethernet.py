@@ -44,7 +44,9 @@ class Ethernet(Protocol):
         dst_mac = options.get('dst_mac')
         if dst_mac is None:
             assert self._mac_resolver is not None, 'mac resolver is not set and got a packet without destination mac'
-            dst_ip = options.get('dst_ip')
+            dst_ip = options.get('gateway')
+            if dst_ip is None:
+                dst_ip = options.get('dst_ip')
             assert dst_ip, 'destination ip or mac must be set'
             dst_mac = await self._mac_resolver.get_mac(adapter, dst_ip)
 

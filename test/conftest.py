@@ -4,8 +4,12 @@ sys.path.append('..')
 
 import pytest
 from network_adapter import MockNetworkAdapter
+from stack import stack
 
 
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 def adapter():
-    return MockNetworkAdapter()
+    adapter = MockNetworkAdapter()
+    stack.add_adapter(adapter)
+    yield adapter
+    stack.remove_adapter(adapter)

@@ -28,7 +28,7 @@ def assert_ether_packet(adapter: MockNetworkAdapter):
 
 @pytest.mark.asyncio
 async def test_build(adapter):
-    await stack.send(Ethernet, adapter, previous_protocol_id=TEST_PREVIOUS_ID, dst_mac=TEST_DST_MAC)
+    await stack.send(Ethernet, previous_protocol_id=TEST_PREVIOUS_ID, dst_mac=TEST_DST_MAC, dst_ip=TEST_DST_IP)
     assert_ether_packet(adapter)
 
 
@@ -52,5 +52,5 @@ async def test_bad_mac(adapter):
 @pytest.mark.asyncio
 async def test_mac_resolver(adapter):
     Ethernet.set_mac_resolver(MockMacResolver())
-    await stack.send(Ethernet, adapter, previous_protocol_id=TEST_PREVIOUS_ID, dst_ip=TEST_DST_IP)
+    await stack.send(Ethernet, previous_protocol_id=TEST_PREVIOUS_ID, dst_ip=TEST_DST_IP)
     assert_ether_packet(adapter)

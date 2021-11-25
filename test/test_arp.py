@@ -67,13 +67,13 @@ def send_arp_reply(adapter):
 
 @pytest.mark.asyncio
 async def test_send_request(adapter: MockNetworkAdapter):
-    await stack.send(ARP, adapter, arp_opcode=ARP.REQUEST_OPCODE, dst_ip=TEST_DST_IP)
+    await stack.send(ARP, arp_opcode=ARP.REQUEST_OPCODE, dst_ip=TEST_DST_IP)
     assert_request_packet(adapter.get_next_packet_nowait(), adapter)
 
 
 @pytest.mark.asyncio
 async def test_send_reply(adapter: MockNetworkAdapter):
-    await stack.send(ARP, adapter, arp_opcode=ARP.REPLY_OPCODE, dst_ip=TEST_DST_IP, dst_mac=TEST_DST_MAC)
+    await stack.send(ARP, arp_opcode=ARP.REPLY_OPCODE, dst_ip=TEST_DST_IP, dst_mac=TEST_DST_MAC)
     assert_reply_packet(adapter.get_next_packet_nowait(), adapter)
 
 
@@ -94,7 +94,7 @@ async def test_handle_reply(adapter: MockNetworkAdapter):
 @pytest.mark.asyncio
 async def test_natural_mac_resolving(adapter: MockNetworkAdapter):
     # this will cause a arp resolving
-    asyncio.create_task(stack.send(Ethernet, adapter, dst_ip=TEST_DST_IP, previous_protocol_id=0x2000))
+    asyncio.create_task(stack.send(Ethernet, dst_ip=TEST_DST_IP, previous_protocol_id=0x2000))
 
     # wait for arp request
     assert_request_packet(await adapter.get_next_packet(), adapter)

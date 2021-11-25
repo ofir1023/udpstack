@@ -3,6 +3,8 @@ import abc
 from typing import Optional, Tuple, Type, List
 from treelib import Tree
 
+from route_table import RouteTable
+from ip_utils import IPAddress
 from adapter import NetworkAdapterInterface
 from task_creator import TaskCreator
 
@@ -42,11 +44,14 @@ class NetworkStack(TaskCreator):
     _protocols = Tree()
 
     def __init__(self):
-        self._adapters = []  # type: List[NetworkAdapterInterface]
+        self._route_table = RouteTable()
         super().__init__()
 
     def add_adapter(self, adapter: NetworkAdapterInterface):
-        self._adapters.append(adapter)
+        self._route_table.add_adapter(adapter)
+
+    def remove_adapter(self, adapter: NetworkAdapterInterface):
+        self._route_table.remove_adapter(adapter)
 
     @classmethod
     def register_protocol(cls, protocol: Type[ProtocolInterface]):
@@ -58,8 +63,14 @@ class NetworkStack(TaskCreator):
     def add_packet(self, packet: bytes, adapter: NetworkAdapterInterface):
         self.create_task(self._handle_packet(packet, adapter))
 
-    async def send(self, top_protocol: ProtocolInterface, adapter: NetworkAdapterInterface, **options):
-        # TODO: support resolving adapter using route table
+    async def send(self, top_protocol: ProtocolInterface, dst_ip: IPAddress,
+                   expected_adapter: NetworkAdapterInterface = None, **options):
+        options['dst_ip'] = dst_ip
+        adapter, gateway = self._route_table.route(dst_ip)
+        if gateway is not None:
+            options['gateway'] = gateway
+        assert expected_adapter is None or expected_adapter is adapter, "expected adapter don't fit"
+
         packet = b''
         protocol_node = self._protocols.get_node(top_protocol)
         while protocol_node is not None:

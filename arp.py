@@ -68,7 +68,7 @@ class ARP(Protocol, MacResolverInterface):
         self._arp_tables.setdefault(adapter, ARPTable()).update(src_ip, src_mac)
 
         if opcode == self.REQUEST_OPCODE:
-            await stack.send(ARP, adapter, arp_opcode=self.REPLY_OPCODE, dst_ip=src_ip)
+            await stack.send(ARP, expected_adapter=adapter, arp_opcode=self.REPLY_OPCODE, dst_ip=src_ip)
 
     def _get_arp_table(self, adapter: NetworkAdapterInterface):
         return self._arp_tables.setdefault(adapter, ARPTable())
@@ -81,5 +81,5 @@ class ARP(Protocol, MacResolverInterface):
             return result
 
         # we got a coroutine, which means there's no available mac for this ip. send arp request and wait for the result
-        await stack.send(ARP, adapter, arp_opcode=self.REQUEST_OPCODE, dst_ip=dst_ip)
+        await stack.send(ARP, arp_opcode=self.REQUEST_OPCODE, dst_ip=dst_ip, expected_adapter=adapter)
         return await result

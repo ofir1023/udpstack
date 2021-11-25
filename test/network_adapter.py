@@ -18,7 +18,8 @@ class MockNetworkAdapter(NetworkAdapterInterface):
 
     @property
     def netmask(self) -> IPAddress:
-        return IPAddress('255.255.255.0')
+        # everything goes through this adapter
+        return IPAddress('0.0.0.0')
 
     @property
     def gateway(self) -> Optional[IPAddress]:

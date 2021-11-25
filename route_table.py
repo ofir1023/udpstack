@@ -58,3 +58,6 @@ class RouteTable:
                 best_entry = entry
         assert best_entry is not None, 'no route for address'
         return best_entry.adapter, best_entry.gateway
+
+    def remove_adapter(self, adapter: NetworkAdapterInterface):
+        self._entries = [entry for entry in self._entries if entry.adapter is not adapter]
