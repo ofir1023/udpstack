@@ -29,3 +29,6 @@ class IPAddress:
 
     def __eq__(self, other: Union[IPAddress, str, bytes, int]):
         return self._ip == IPAddress(other)._ip
+
+    def in_network(self, ip: IPAddress, netmask: IPAddress):
+        return (int(ip) & int(netmask)) == (int(self) & int(netmask))

@@ -1,5 +1,6 @@
 import abc
 from ip_utils import IPAddress
+from typing import Optional
 
 
 class NetworkAdapterInterface(abc.ABC):
@@ -17,6 +18,22 @@ class NetworkAdapterInterface(abc.ABC):
     def ip(self) -> IPAddress:
         """
         the ip of the adapter
+        """
+        pass
+
+    @property
+    @abc.abstractmethod
+    def netmask(self) -> IPAddress:
+        """
+        the netmask of this adapter
+        """
+        pass
+
+    @property
+    @abc.abstractmethod
+    def gateway(self) -> Optional[IPAddress]:
+        """
+        the gateway of destinations outside LAN
         """
         pass
 

@@ -1,6 +1,7 @@
 from stack import NetworkAdapterInterface
 from ip_utils import IPAddress
 import asyncio
+from typing import Optional
 
 
 class MockNetworkAdapter(NetworkAdapterInterface):
@@ -14,6 +15,14 @@ class MockNetworkAdapter(NetworkAdapterInterface):
     @property
     def ip(self) -> IPAddress:
         return IPAddress('1.2.3.4')
+
+    @property
+    def netmask(self) -> IPAddress:
+        return IPAddress('255.255.255.0')
+
+    @property
+    def gateway(self) -> Optional[IPAddress]:
+        return None
 
     async def send(self, packet: bytes):
         await self.sent_packets.put(packet)
