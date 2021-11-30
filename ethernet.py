@@ -22,13 +22,14 @@ class MacResolverInterface(abc.ABC):
 
 
 class Ethernet(Protocol):
-    _mac_resolver = None  # type: Optional[MacResolverInterface]
     MAC_LENGTH = 6
     _PROTOCOL_ID_STRUCT = struct.Struct('>H')
 
-    @classmethod
-    def set_mac_resolver(cls, mac_resolver: MacResolverInterface):
-        cls._mac_resolver = mac_resolver
+    def __init__(self):
+        self._mac_resolver = None  # type: Optional[MacResolverInterface]
+
+    def set_mac_resolver(self, mac_resolver: MacResolverInterface):
+        self._mac_resolver = mac_resolver
 
     @staticmethod
     def build_mac(mac: str) -> bytes:

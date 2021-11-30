@@ -80,6 +80,10 @@ class NetworkStack(TaskCreator):
 
         await adapter.send(packet)
 
+    @classmethod
+    def get_protocol(cls, protocol_type: type) -> ProtocolInterface:
+        return cls._protocols.get_node(protocol_type).data
+
     async def _handle_packet(self, packet: bytes, adapter: NetworkAdapterInterface):
         protocol_node = self._protocols.get_node(self._protocols.root)
         packet_description = {}

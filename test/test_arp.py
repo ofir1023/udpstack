@@ -88,7 +88,7 @@ async def test_handle_request(adapter: MockNetworkAdapter):
 async def test_handle_reply(adapter: MockNetworkAdapter):
     send_arp_reply(adapter)
     # make sure it saved the mac
-    assert await Ethernet._mac_resolver.get_mac(adapter, TEST_DST_IP) == TEST_DST_MAC
+    assert await stack.get_protocol(Ethernet)._mac_resolver.get_mac(adapter, TEST_DST_IP) == TEST_DST_MAC
 
 
 @pytest.mark.asyncio

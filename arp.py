@@ -22,7 +22,7 @@ class ARP(Protocol, MacResolverInterface):
 
     def __init__(self):
         self._arp_tables = {}
-        Ethernet.set_mac_resolver(self)
+        stack.get_protocol(Ethernet).set_mac_resolver(self)
 
     async def build(self, adapter: NetworkAdapterInterface, packet: bytes, options) -> bytes:
         assert packet == b'', 'packet given to arp layer should be empty'
@@ -65,13 +65,16 @@ class ARP(Protocol, MacResolverInterface):
         if dst_ip != adapter.ip or not Ethernet.relevant_mac(adapter, dst_mac):
             return None
 
-        self._arp_tables.setdefault(adapter, ARPTable()).update(src_ip, src_mac)
+        self.add_arp_entry(adapter, src_ip, src_mac)
 
         if opcode == self.REQUEST_OPCODE:
             await stack.send(ARP, expected_adapter=adapter, arp_opcode=self.REPLY_OPCODE, dst_ip=src_ip)
 
     def _get_arp_table(self, adapter: NetworkAdapterInterface):
         return self._arp_tables.setdefault(adapter, ARPTable())
+
+    def add_arp_entry(self, adapter: NetworkAdapterInterface, src_ip: IPAddress, src_mac: str):
+        self._arp_tables.setdefault(adapter, ARPTable()).update(src_ip, src_mac)
 
     async def get_mac(self, adapter: NetworkAdapterInterface, dst_ip: IPAddress) -> str:
         arp_table = self._get_arp_table(adapter)

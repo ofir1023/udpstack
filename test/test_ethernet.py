@@ -51,6 +51,6 @@ async def test_bad_mac(adapter):
 
 @pytest.mark.asyncio
 async def test_mac_resolver(adapter):
-    Ethernet.set_mac_resolver(MockMacResolver())
+    stack.get_protocol(Ethernet).set_mac_resolver(MockMacResolver())
     await stack.send(Ethernet, previous_protocol_id=TEST_PREVIOUS_ID, dst_ip=TEST_DST_IP)
     assert_ether_packet(adapter)
