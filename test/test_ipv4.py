@@ -3,7 +3,7 @@ import pytest
 import asyncio
 
 from stack import stack
-from ipv4 import IPv4
+from ipv4 import IPv4, TTLExceededHandler
 from network_adapter import MockNetworkAdapter
 from ip_utils import IPAddress
 
@@ -56,3 +56,28 @@ async def test_handle(adapter: MockNetworkAdapter):
     assert description['dst_ip'] == adapter.ip
     assert rest_of_packet == TEST_PAYLOAD
     assert prev_id == TEST_PREVIOUS_ID
+
+
+@pytest.mark.asyncio
+async def test_ttl_exceeded(adapter: MockNetworkAdapter):
+    class TTLExceededTestHandler(TTLExceededHandler):
+        def __init__(self):
+            self.event = asyncio.Event()
+            self.packet = None
+
+        async def handle_ttl_exceeded(self, packet: bytes, packet_description: dict):
+            assert self.packet is None, 'handle should be called once'
+            self.event.set()
+            self.packet = packet
+
+    handler = TTLExceededTestHandler()
+    stack.get_protocol(IPv4).register_to_ttl_exceeded_callback(handler)
+
+    ether = Ether(src=TEST_DST_MAC, dst=adapter.mac)
+    ip = IP(src=str(TEST_DST_IP), dst=str(adapter.ip), ttl=0)
+    full_packet = ether / ip
+    stack.add_packet(full_packet.build(), adapter)
+
+    await handler.event.wait()
+    assert handler.packet is not None
+    assert handler.packet == ip.build()
