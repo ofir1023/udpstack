@@ -52,7 +52,8 @@ class IPv4(Protocol):
         if header_checksum != calculated_checksum:
             return None
 
-        if version_and_header_length != 0x45 \
+        # support only basic IP header, with no options or fragmentation
+        if version_and_header_length != (self.VERSION << 4) + self.HEADER_LENGTH \
                 or options != 0 \
                 or flags_and_fragment_offset != 0:
             return None
