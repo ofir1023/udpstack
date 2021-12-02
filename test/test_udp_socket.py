@@ -80,6 +80,7 @@ async def test_two_binds(adapter: MockNetworkAdapter):
 
 @pytest.mark.asyncio
 async def test_send_without_connect(adapter: MockNetworkAdapter):
+    stack.get_protocol(Ethernet).set_mac_resolver(MockMacResolver())
     s = UDPSocket()
     try:
         s.send(TEST_PAYLOAD)
@@ -89,11 +90,12 @@ async def test_send_without_connect(adapter: MockNetworkAdapter):
 
 @pytest.mark.asyncio
 async def test_send_without_bind(adapter: MockNetworkAdapter):
+    stack.get_protocol(Ethernet).set_mac_resolver(MockMacResolver())
     s = UDPSocket()
     s.connect(TEST_DST_IP, TEST_DST_PORT)
-    s.send(TEST_PAYLOAD)
-    s.close()
+    await s.send(TEST_PAYLOAD)
     assert s.src_port is not None, "socket should be bound now"
+    s.close()
 
 @pytest.mark.asyncio
 async def test_recv_without_bind(adapter: MockNetworkAdapter):
@@ -103,3 +105,13 @@ async def test_recv_without_bind(adapter: MockNetworkAdapter):
         assert False, "an exception should have been thrown"
     except:
         pass
+
+@pytest.mark.asyncio
+async def test_enter_and_exit(adapter: MockNetworkAdapter):
+    stack.get_protocol(Ethernet).set_mac_resolver(MockMacResolver())
+    with UDPSocket() as s: 
+        s.bind(TEST_SRC_PORT)
+        s.connect(TEST_DST_IP, TEST_DST_PORT)
+        await s.send(TEST_PAYLOAD)
+        assert_packet(adapter.get_next_packet_nowait(), adapter)
+    assert s.src_port is None, "socket should be unbound now"

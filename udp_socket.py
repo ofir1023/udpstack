@@ -8,6 +8,12 @@ class UDPSocket:
         self.dst_ip = None
         self.dst_port = None
 
+    def __enter__(self):
+        return self
+  
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.close()
+
     def bind(self, src_port: int):
         if src_port < 0 or src_port > 65535:
             raise Exception("trying to bind to invalid port number")
@@ -36,7 +42,7 @@ class UDPSocket:
     async def sendto(self, data, dst_ip: str, dst_port: int):
         if self.src_port is None:
             self.bind(0)
-            
+
         return stack.send(UDP, src_port=self.src_port, dst_port=dst_port, dst_ip=dst_ip, data=data)
     
     async def recv(self, buffer_size):
@@ -52,6 +58,8 @@ class UDPSocket:
         return packet
 
     def close(self):
-        stack.get_protocol(UDP).destroy_queue(self.src_port)
+        if self.src_port:
+            stack.get_protocol(UDP).destroy_queue(self.src_port)
+            self.src_port = None
     
 
