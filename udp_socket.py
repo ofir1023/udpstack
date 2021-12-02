@@ -21,7 +21,7 @@ class UDPSocket:
         if src_port == 0:
             src_port = random.randint(1, 65535)
 
-        if not stack.get_protocol(UDP).create_queue(src_port):
+        if not stack.get_protocol(UDP).open_port(src_port):
             raise Exception("there's already a bound socket on port {}".format(src_port))
 
         self.src_port = src_port
@@ -59,7 +59,7 @@ class UDPSocket:
 
     def close(self):
         if self.src_port:
-            stack.get_protocol(UDP).destroy_queue(self.src_port)
+            stack.get_protocol(UDP).close_port(self.src_port)
             self.src_port = None
     
 

@@ -48,7 +48,7 @@ async def test_handle(adapter: MockNetworkAdapter):
     packet = udp / TEST_PAYLOAD
     description = {'src_ip': adapter.ip, 'dst_ip': TEST_DST_IP}
 
-    stack.get_protocol(UDP).create_queue(TEST_DST_PORT)
+    stack.get_protocol(UDP).open_port(TEST_DST_PORT)
     await stack.get_protocol(UDP).handle(packet.build(), adapter, description)
     assert await stack.get_protocol(UDP).get_packet(TEST_DST_PORT) == (str(adapter.ip), TEST_SRC_PORT, TEST_PAYLOAD)
-    stack.get_protocol(UDP).destroy_queue(TEST_DST_PORT)
+    stack.get_protocol(UDP).close_port(TEST_DST_PORT)

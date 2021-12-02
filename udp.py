@@ -71,14 +71,14 @@ class UDP(Protocol):
 
         return None
 
-    def create_queue(self, port: int):
+    def open_port(self, port: int):
         if port in self.queues.keys():
             return False
 
         self.queues[port] = PacketQueue()
         return True
 
-    def destroy_queue(self, port: int):
+    def close_port(self, port: int):
         self.queues.pop(port, None)
 
     async def get_packet(self, port: int):
