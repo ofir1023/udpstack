@@ -7,6 +7,25 @@ from stack import NetworkAdapterInterface
 from protocol import Protocol
 from ipv4 import IPv4
 from utils import calculate_checksum
+from asyncio import Event
+
+class PacketQueue:
+    def __init__(self):
+        self._queue = []
+        self._event = Event()
+
+    def pop(self):
+        if len(self._queue) == 0:
+            return None
+        return self._queue.pop()
+
+    async def wait_for_data(self):
+        await self._event.wait()
+        return self.pop()
+
+    def append(self, data: bytes):
+        self._queue.append(data)
+        self._event.set()
 
 
 class UDP(Protocol):
@@ -16,7 +35,7 @@ class UDP(Protocol):
     PSEUDO_HEADER_STRUCT = struct.Struct('>IIBBHHHHH')
 
     def __init__(self):
-        self.queue = {}
+        self.queues = {}
 
     async def build(self, adapter: NetworkAdapterInterface, packet: bytes, options) -> bytes:
         pseudo_header = self.PSEUDO_HEADER_STRUCT.pack(
@@ -26,7 +45,7 @@ class UDP(Protocol):
         udp_header = self.PROTOCOL_STRUCT.pack(
             options['src_port'], options['dst_port'], len(packet), 
             calculate_checksum(pseudo_header + packet))
-        return udp_header + packet
+        return udp_header + options['data']
 
     async def handle(self, packet: bytes, adapter: NetworkAdapterInterface, packet_description: dict) \
             -> Optional[Tuple[bytes, int]]:
@@ -43,9 +62,28 @@ class UDP(Protocol):
         if checksum != 0:
             assert checksum == calculated_checksum, "received checksum doesn't match calculated checksum"
 
-        if dst_port in self.queue.keys():
-            self.queue[dst_port].append(data)
+        if dst_port in self.queues.keys():
+            self.queues[dst_port].append((str(packet_description['src_ip']), src_port, data))
         else:
-            self.queue[dst_port] = [data]
+            # TODO: icmp unreachable?
+            return None
 
         return None
+
+    def create_queue(self, port: int):
+        if port in self.queues.keys():
+            return False
+
+        self.queues[port] = PacketQueue()
+        return True
+
+    def destroy_queue(self, port: int):
+        self.queues.pop(port, None)
+
+    async def get_packet(self, port: int):
+        if port in self.queues.keys():
+            data = self.queues[port].pop()
+            if data is not None:
+                return data
+
+        return await self.queues[port].wait_for_data()
