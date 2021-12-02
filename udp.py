@@ -38,6 +38,7 @@ class UDP(Protocol):
         self.queues = {}
 
     async def build(self, adapter: NetworkAdapterInterface, packet: bytes, options) -> bytes:
+        # pseudo header for checksum
         pseudo_header = self.PSEUDO_HEADER_STRUCT.pack(
             int(adapter.ip), int(IPAddress(options['dst_ip'])), 0, self.PROTOCOL_ID,
             self.PROTOCOL_STRUCT.size + len(packet), options['src_port'], options['dst_port'],
@@ -54,13 +55,13 @@ class UDP(Protocol):
         src_port, dst_port, length, checksum = self.PROTOCOL_STRUCT.unpack(packet_io.read(self.PROTOCOL_STRUCT.size))
         data = packet_io.read(length)
 
+        # pseudo header for checksum
         pseudo_header = self.PSEUDO_HEADER_STRUCT.pack(
             int(IPAddress(packet_description['src_ip'])), int(IPAddress(packet_description['dst_ip'])), 
             0, self.PROTOCOL_ID, length, src_port, dst_port, length, 0)
 
-        calculated_checksum = calculate_checksum(pseudo_header + data)
-        if checksum != 0:
-            assert checksum == calculated_checksum, "received checksum doesn't match calculated checksum"
+        if checksum != 0 and checksum != calculate_checksum(pseudo_header + data):
+            return None
 
         if dst_port in self.queues.keys():
             self.queues[dst_port].append((str(packet_description['src_ip']), src_port, data))
