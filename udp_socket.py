@@ -24,19 +24,20 @@ class UDPSocket:
             raise Exception("trying to bind to invalid port number")
 
         if src_ip and src_ip != '0.0.0.0':
-            src_adapter = stack.get_adapter(src_ip)
-            if not src_adapter:
-                raise Exception("Adapter for {} wasn't found".format(src_ip))
-            self.src_adapter = src_adapter
+            self.src_adapter = stack.get_adapter(src_ip)
 
         if src_port == 0:
             src_port = random.randint(1, 65535)
-            while not stack.get_protocol(UDP).open_port(src_port):
-                src_port = random.randint(1, 65535)
+            while True:
+                try:
+                    stack.get_protocol(UDP).open_port(src_port)
+                    break
+                except:
+                    src_port = random.randint(1, 65535)
+                
         else:
-            if not stack.get_protocol(UDP).open_port(src_port):
-                raise Exception("there's already a bound socket on port {}".format(src_port))
-
+            stack.get_protocol(UDP).open_port(src_port)
+                
         self.src_port = src_port
 
     def connect(self, dst_ip: str, dst_port: int):

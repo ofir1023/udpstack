@@ -73,17 +73,16 @@ class UDP(Protocol):
 
     def open_port(self, port: int):
         if port in self.queues.keys():
-            return False
+            raise Exception("port {} is already open".format(port))
 
         self.queues[port] = PacketQueue()
-        return True
 
     def close_port(self, port: int):
         self.queues.pop(port, None)
 
-    async def get_packet(self, port: int)
+    async def get_packet(self, port: int):
         if port not in self.queues.keys():
-            raise Exception("port is not open")
+            raise Exception("port {} is not open".format(port))
 
         # check if there is available packet to consume
         data = self.queues[port].pop()
