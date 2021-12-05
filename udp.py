@@ -19,7 +19,7 @@ class PacketQueue:
             return None
         return self._queue.pop()
 
-    async def wait_for_data(self):
+    async def wait_for_packet(self):
         await self._event.wait()
         return self.pop()
 
@@ -81,10 +81,14 @@ class UDP(Protocol):
     def close_port(self, port: int):
         self.queues.pop(port, None)
 
-    async def get_packet(self, port: int):
-        if port in self.queues.keys():
-            data = self.queues[port].pop()
-            if data is not None:
-                return data
+    async def get_packet(self, port: int)
+        if port not in self.queues.keys():
+            raise Exception("port is not open")
 
-        return await self.queues[port].wait_for_data()
+        # check if there is available packet to consume
+        data = self.queues[port].pop()
+        if data is not None:
+            return data
+
+        # if no available packet, then wait for packet to arrive
+        return await self.queues[port].wait_for_packet()
