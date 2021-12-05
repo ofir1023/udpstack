@@ -53,6 +53,9 @@ class NetworkStack(TaskCreator):
     def remove_adapter(self, adapter: NetworkAdapterInterface):
         self._route_table.remove_adapter(adapter)
 
+    def get_adapter(self, ip: str) -> NetworkAdapterInterface:
+        return self._route_table.get_adapter(ip)
+
     @classmethod
     def register_protocol(cls, protocol: Type[ProtocolInterface]):
         parent = None

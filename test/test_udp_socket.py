@@ -46,16 +46,17 @@ def assert_packet(packet: bytes, adapter: MockNetworkAdapter):
 async def test_send(adapter: MockNetworkAdapter):
     stack.get_protocol(Ethernet).set_mac_resolver(MockMacResolver())
     s = UDPSocket()
-    s.bind(TEST_SRC_PORT)
+    s.bind(None, TEST_SRC_PORT)
     s.connect(TEST_DST_IP, TEST_DST_PORT)
     await s.send(TEST_PAYLOAD)
     assert_packet(adapter.get_next_packet_nowait(), adapter)
+    s.close()
 
 
 @pytest.mark.asyncio
 async def test_handle(adapter: MockNetworkAdapter):
     s = UDPSocket()
-    s.bind(TEST_DST_PORT)
+    s.bind(None, TEST_DST_PORT)
 
     udp = SCAPY_UDP(sport=TEST_SRC_PORT, dport=TEST_DST_PORT)
     packet = udp / TEST_PAYLOAD
@@ -68,11 +69,11 @@ async def test_handle(adapter: MockNetworkAdapter):
 @pytest.mark.asyncio
 async def test_two_binds(adapter: MockNetworkAdapter):
     s1 = UDPSocket()
-    s1.bind(TEST_DST_PORT)
+    s1.bind(None, TEST_DST_PORT)
 
     s2 = UDPSocket()
     try:
-        s2.bind(TEST_DST_PORT)
+        s2.bind(None, TEST_DST_PORT)
         assert False, "an exception should have been thrown"
     except:
         pass
@@ -110,7 +111,7 @@ async def test_recv_without_bind(adapter: MockNetworkAdapter):
 async def test_enter_and_exit(adapter: MockNetworkAdapter):
     stack.get_protocol(Ethernet).set_mac_resolver(MockMacResolver())
     with UDPSocket() as s: 
-        s.bind(TEST_SRC_PORT)
+        s.bind(None, TEST_SRC_PORT)
         s.connect(TEST_DST_IP, TEST_DST_PORT)
         await s.send(TEST_PAYLOAD)
         assert_packet(adapter.get_next_packet_nowait(), adapter)

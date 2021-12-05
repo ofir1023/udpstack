@@ -41,6 +41,12 @@ class RouteTable:
             self._entries.append(RouteEntry(adapter, IPAddress('0.0.0.0'), IPAddress('0.0.0.0'), adapter.gateway))
         self._entries.append(RouteEntry(adapter, adapter.ip, adapter.netmask))
 
+    def get_adapter(self, ip: str) -> NetworkAdapterInterface:
+        for entry in self._entries:
+            if entry.adapter.ip == ip:
+                return entry.adapter
+        return None
+
     def add_static_route(self, entry: RouteEntry):
         self._entries.append(entry)
 
