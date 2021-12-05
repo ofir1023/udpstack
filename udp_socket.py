@@ -1,6 +1,7 @@
 import random
 from stack import stack
 from udp import UDP
+from typing import Optional
 
 
 class UDPSocket:
@@ -17,7 +18,7 @@ class UDPSocket:
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.close()
 
-    def bind(self, src_ip: str, src_port: int):
+    def bind(self, src_ip: Optional[str], src_port: int):
         if self.closed:
             raise Exception("socket is closed")
 
@@ -58,8 +59,8 @@ class UDPSocket:
         if self.src_port is None:
             self.bind(None, 0)
 
-        await stack.send(UDP, src_port=self.src_port, dst_port=self.dst_port, dst_ip=self.dst_ip, \
-            data=data, expected_adapter=self.src_adapter)
+        await stack.send(UDP, src_port=self.src_port, dst_port=self.dst_port, dst_ip=self.dst_ip,
+                         data=data, expected_adapter=self.src_adapter)
 
     async def sendto(self, data, dst_ip: str, dst_port: int):
         if self.closed:

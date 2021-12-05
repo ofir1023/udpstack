@@ -47,7 +47,7 @@ async def test_send(adapter: MockNetworkAdapter):
     stack.get_protocol(Ethernet).set_mac_resolver(MockMacResolver())
     s = UDPSocket()
     s.bind(None, TEST_SRC_PORT)
-    s.connect(TEST_DST_IP, TEST_DST_PORT)
+    s.connect(str(TEST_DST_IP), TEST_DST_PORT)
     await s.send(TEST_PAYLOAD)
     assert_packet(adapter.get_next_packet_nowait(), adapter)
     s.close()
@@ -85,7 +85,7 @@ async def test_send_without_connect(adapter: MockNetworkAdapter):
     stack.get_protocol(Ethernet).set_mac_resolver(MockMacResolver())
     s = UDPSocket()
     try:
-        s.send(TEST_PAYLOAD)
+        await s.send(TEST_PAYLOAD)
         assert False, "an exception should have been thrown"
     except:
         pass
@@ -95,7 +95,7 @@ async def test_send_without_connect(adapter: MockNetworkAdapter):
 async def test_send_without_bind(adapter: MockNetworkAdapter):
     stack.get_protocol(Ethernet).set_mac_resolver(MockMacResolver())
     s = UDPSocket()
-    s.connect(TEST_DST_IP, TEST_DST_PORT)
+    s.connect(str(TEST_DST_IP), TEST_DST_PORT)
     await s.send(TEST_PAYLOAD)
     assert s.src_port is not None, "socket should be bound now"
     s.close()
@@ -105,7 +105,7 @@ async def test_send_without_bind(adapter: MockNetworkAdapter):
 async def test_recv_without_bind(adapter: MockNetworkAdapter):
     s = UDPSocket()
     try:
-        s.recv(len(TEST_PAYLOAD))
+        await s.recv(len(TEST_PAYLOAD))
         assert False, "an exception should have been thrown"
     except:
         pass
@@ -116,7 +116,7 @@ async def test_enter_and_exit(adapter: MockNetworkAdapter):
     stack.get_protocol(Ethernet).set_mac_resolver(MockMacResolver())
     with UDPSocket() as s: 
         s.bind(None, TEST_SRC_PORT)
-        s.connect(TEST_DST_IP, TEST_DST_PORT)
+        s.connect(str(TEST_DST_IP), TEST_DST_PORT)
         await s.send(TEST_PAYLOAD)
         assert_packet(adapter.get_next_packet_nowait(), adapter)
     assert s.src_port is None, "socket should be unbound now"
