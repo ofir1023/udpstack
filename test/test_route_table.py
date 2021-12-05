@@ -1,5 +1,5 @@
 from route_table import RouteTable, RouteEntry
-from adapter import NetworkAdapterInterface
+from adapter_interface import NetworkAdapterInterface
 from ip_utils import IPAddress
 from typing import Optional
 

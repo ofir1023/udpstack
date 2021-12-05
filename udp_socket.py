@@ -1,7 +1,9 @@
 import random
+from typing import Optional
+
 from stack import stack
 from udp import UDP
-from typing import Optional
+from ip_utils import IPAddress
 
 
 class UDPSocket:
@@ -46,7 +48,7 @@ class UDPSocket:
         if self.closed:
             raise Exception("socket is closed")
 
-        self.dst_ip = dst_ip
+        self.dst_ip = IPAddress(dst_ip)
         self.dst_port = dst_port
 
     async def send(self, data):

@@ -1,5 +1,5 @@
 from ip_utils import IPAddress
-from adapter import NetworkAdapterInterface
+from adapter_interface import NetworkAdapterInterface
 from typing import List, Tuple, Optional
 
 

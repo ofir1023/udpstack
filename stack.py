@@ -5,7 +5,7 @@ from treelib import Tree
 
 from route_table import RouteTable
 from ip_utils import IPAddress
-from adapter import NetworkAdapterInterface
+from adapter_interface import NetworkAdapterInterface
 from task_creator import TaskCreator
 
 
