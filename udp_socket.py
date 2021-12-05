@@ -1,6 +1,7 @@
 import random
 from stack import stack
-from udp import UDP, PacketQueue
+from udp import UDP
+
 
 class UDPSocket:
     def __init__(self):
@@ -93,5 +94,3 @@ class UDPSocket:
         if self.src_port:
             stack.get_protocol(UDP).close_port(self.src_port)
             self.src_port = None
-    
-

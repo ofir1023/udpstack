@@ -9,6 +9,7 @@ from ipv4 import IPv4
 from utils import calculate_checksum
 from asyncio import Event
 
+
 class PacketQueue:
     def __init__(self):
         self._queue = []

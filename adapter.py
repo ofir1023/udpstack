@@ -2,10 +2,10 @@ import abc
 from ip_utils import IPAddress
 from typing import Optional
 
-import asyncio
 from sniffer import Sniffer
 from task_creator import TaskCreator
-import stack
+from stack import stack
+
 
 class NetworkAdapterInterface(abc.ABC):
     @property
@@ -49,6 +49,7 @@ class NetworkAdapterInterface(abc.ABC):
         """
         pass
 
+
 class TaskNetworkAdapter(NetworkAdapterInterface, TaskCreator):
     def __init__(self):
         super().__init__()
@@ -59,7 +60,7 @@ class TaskNetworkAdapter(NetworkAdapterInterface, TaskCreator):
     async def handle_packets(self):
         while True:
             packet = await self.get_packet()
-            stack.stack.add_packet(packet, self)
+            stack.add_packet(packet, self)
 
     @abc.abstractmethod
     async def get_packet(self):

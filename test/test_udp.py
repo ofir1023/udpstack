@@ -1,7 +1,6 @@
 from scapy.all import Ether, IP, Padding
 from scapy.all import UDP as SCAPY_UDP
 import pytest
-import asyncio
 
 from stack import stack
 from udp import UDP

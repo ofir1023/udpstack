@@ -1,7 +1,6 @@
 from scapy.all import Ether, IP, Padding
 from scapy.all import UDP as SCAPY_UDP
 import pytest
-import asyncio
 
 from stack import stack, NetworkAdapterInterface
 from udp import UDP
@@ -23,6 +22,7 @@ class MockMacResolver(MacResolverInterface):
     async def get_mac(self, adapter: NetworkAdapterInterface, dst_ip: IPAddress) -> str:
         assert dst_ip == TEST_DST_IP
         return TEST_DST_MAC
+
 
 def assert_packet(packet: bytes, adapter: MockNetworkAdapter):
     packet = Ether(packet)
@@ -66,6 +66,7 @@ async def test_handle(adapter: MockNetworkAdapter):
     assert await s.recv(len(TEST_PAYLOAD)) == TEST_PAYLOAD
     s.close()
 
+
 @pytest.mark.asyncio
 async def test_two_binds(adapter: MockNetworkAdapter):
     s1 = UDPSocket()
@@ -89,6 +90,7 @@ async def test_send_without_connect(adapter: MockNetworkAdapter):
     except:
         pass
 
+
 @pytest.mark.asyncio
 async def test_send_without_bind(adapter: MockNetworkAdapter):
     stack.get_protocol(Ethernet).set_mac_resolver(MockMacResolver())
@@ -98,6 +100,7 @@ async def test_send_without_bind(adapter: MockNetworkAdapter):
     assert s.src_port is not None, "socket should be bound now"
     s.close()
 
+
 @pytest.mark.asyncio
 async def test_recv_without_bind(adapter: MockNetworkAdapter):
     s = UDPSocket()
@@ -106,6 +109,7 @@ async def test_recv_without_bind(adapter: MockNetworkAdapter):
         assert False, "an exception should have been thrown"
     except:
         pass
+
 
 @pytest.mark.asyncio
 async def test_enter_and_exit(adapter: MockNetworkAdapter):
