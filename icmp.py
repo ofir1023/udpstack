@@ -21,10 +21,6 @@ class ICMP(Protocol, TTLExceededHandler):
 
     HEADER_STRUCT = struct.Struct('BBH')
 
-    ECHO_IDENTIFIER = 0x1337
-    ECHO_DEFAULT_DATA = b'udpstack'
-    ECHO_STRUCT = struct.Struct('>HH')
-
     ERROR_CODES = (ICMPCodes.DESTINATION_UNREACHABLE, ICMPCodes.TTL_EXCEEDED)
 
     def __init__(self):
