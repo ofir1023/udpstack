@@ -6,6 +6,7 @@ from stack import stack
 from ipv4 import IPv4, TTLExceededHandler
 from network_adapter import MockNetworkAdapter
 from ip_utils import IPAddress
+from packet import Packet
 
 
 TEST_DST_IP = IPAddress('1.1.1.1')
@@ -49,12 +50,14 @@ async def test_send(adapter: MockNetworkAdapter):
 @pytest.mark.asyncio
 async def test_handle(adapter: MockNetworkAdapter):
     ip = IP(src=str(TEST_DST_IP), dst=str(adapter.ip), proto=TEST_PREVIOUS_ID)
-    packet = ip / TEST_PAYLOAD
-    description = {}
-    rest_of_packet, prev_id = await IPv4().handle(packet.build(), adapter, description)
-    assert description['src_ip'] == TEST_DST_IP
-    assert description['dst_ip'] == adapter.ip
-    assert rest_of_packet == TEST_PAYLOAD
+    packet_layers = ip / TEST_PAYLOAD
+    packet = Packet(packet_layers.build())
+
+    prev_id = await IPv4().handle(packet, adapter)
+    ip_layer = packet.get_layer('ip')
+    assert ip_layer.attributes['src'] == TEST_DST_IP
+    assert ip_layer.attributes['dst'] == adapter.ip
+    assert packet.current_packet == TEST_PAYLOAD
     assert prev_id == TEST_PREVIOUS_ID
 
 
@@ -65,7 +68,7 @@ async def test_ttl_exceeded(adapter: MockNetworkAdapter):
             self.event = asyncio.Event()
             self.packet = None
 
-        async def handle_ttl_exceeded(self, packet: bytes, packet_description: dict):
+        async def handle_ttl_exceeded(self, packet: Packet):
             assert self.packet is None, 'handle should be called once'
             self.event.set()
             self.packet = packet
@@ -80,4 +83,5 @@ async def test_ttl_exceeded(adapter: MockNetworkAdapter):
 
     await handler.event.wait()
     assert handler.packet is not None
-    assert handler.packet == ip.build()
+    handler.packet.get_layer('ip')  # make sure layer exists, since the handler should be called after processing
+    assert handler.packet.current_packet == b''

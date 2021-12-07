@@ -4,6 +4,7 @@ from ipv4 import IPv4, TTLExceededHandler
 from utils import calculate_checksum
 from typing import Optional, Tuple
 from stack import stack
+from packet import Packet
 
 import struct
 from enum import Enum
@@ -33,9 +34,10 @@ class ICMP(Protocol, TTLExceededHandler):
         }
         stack.get_protocol(IPv4).register_to_ttl_exceeded_callback(self)
 
-    async def handle_ttl_exceeded(self, packet: bytes, packet_description: dict):
-        await stack.send(ICMP, dst_ip=packet_description['src_ip'], icmp_type=ICMPCodes.TTL_EXCEEDED,
-                         error_packet=packet)
+    async def handle_ttl_exceeded(self, packet: Packet):
+        ip = packet.get_layer('ip')
+        await stack.send(ICMP, dst_ip=ip.attributes['src'], icmp_type=ICMPCodes.TTL_EXCEEDED,
+                         error_packet=ip.data + packet.current_packet)
 
     @staticmethod
     def _pack(type: ICMPCodes, code: int, data: bytes):
@@ -60,7 +62,6 @@ class ICMP(Protocol, TTLExceededHandler):
         builder = self._builders[options['icmp_type']]
         return packet + builder(options)
 
-    async def handle(self, packet: bytes, adapter: NetworkAdapterInterface, packet_description: dict) -> \
-             Optional[Tuple[bytes, int]]:
+    async def handle(self, packet: Packet, adapter: NetworkAdapterInterface) -> Optional[int]:
         # nothing to do with incoming icmp packet
         pass

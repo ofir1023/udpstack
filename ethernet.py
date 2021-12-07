@@ -7,6 +7,7 @@ import consts
 from protocol import Protocol
 from stack import NetworkAdapterInterface
 from ip_utils import IPAddress
+from packet import Packet
 
 
 class MacResolverInterface(abc.ABC):
@@ -58,20 +59,20 @@ class Ethernet(Protocol):
         ethernet_header = dst_mac + src_mac + self._PROTOCOL_ID_STRUCT.pack(previous_protocol_id)
         return ethernet_header + packet
 
-    async def handle(self, packet: bytes, adapter: NetworkAdapterInterface, packet_description: dict) \
+    async def handle(self, packet: Packet, adapter: NetworkAdapterInterface) \
             -> Optional[Tuple[bytes, int]]:
-        dst_mac = self.parse_mac(packet[:self.MAC_LENGTH])
+        data = packet.current_packet
+        dst_mac = self.parse_mac(data[:self.MAC_LENGTH])
         if not self.relevant_mac(adapter, dst_mac):
             return None
-        src_mac = self.parse_mac(packet[self.MAC_LENGTH:self.MAC_LENGTH*2])
-
-        packet_description['dst_mac'] = dst_mac
-        packet_description['src_mac'] = src_mac
-
+        src_mac = self.parse_mac(data[self.MAC_LENGTH:self.MAC_LENGTH*2])
         protocol_id_start = 2 * self.MAC_LENGTH
-        protocol_id_bytes = packet[protocol_id_start:protocol_id_start + self._PROTOCOL_ID_STRUCT.size]
+        protocol_id_bytes = data[protocol_id_start:protocol_id_start + self._PROTOCOL_ID_STRUCT.size]
         protocol_id, = self._PROTOCOL_ID_STRUCT.unpack(protocol_id_bytes)
-        return packet[protocol_id_start + self._PROTOCOL_ID_STRUCT.size:], protocol_id
+
+        size = protocol_id_start + self._PROTOCOL_ID_STRUCT.size
+        packet.add_layer('ethernet', {'dst': dst_mac, 'src': src_mac}, size)
+        return protocol_id
 
     @staticmethod
     def relevant_mac(adapter: NetworkAdapterInterface, mac: str):

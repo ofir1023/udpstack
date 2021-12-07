@@ -54,14 +54,15 @@ async def test_send(adapter: MockNetworkAdapter):
 
 
 @pytest.mark.asyncio
-async def test_handle(adapter: MockNetworkAdapter):
+async def test_recv(adapter: MockNetworkAdapter):
     s = UDPSocket()
     s.bind(None, TEST_DST_PORT)
 
+    ether = Ether(src=TEST_DST_MAC, dst=adapter.mac)
+    ip = IP(src=TEST_DST_IP, dst=adapter.ip)
     udp = SCAPY_UDP(sport=TEST_SRC_PORT, dport=TEST_DST_PORT)
-    packet = udp / TEST_PAYLOAD
-    description = {'src_ip': adapter.ip, 'dst_ip': TEST_DST_IP}
-    await stack.get_protocol(UDP).handle(packet.build(), adapter, description)
+    packet = ether / ip / udp / TEST_PAYLOAD
+    stack.add_packet(packet.build(), adapter)
 
     assert await s.recv(len(TEST_PAYLOAD)) == TEST_PAYLOAD
     s.close()

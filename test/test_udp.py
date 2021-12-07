@@ -6,6 +6,7 @@ from stack import stack
 from udp import UDP
 from network_adapter import MockNetworkAdapter
 from ip_utils import IPAddress
+from packet import Packet
 
 
 TEST_DST_IP = IPAddress('1.1.1.1')
@@ -36,18 +37,20 @@ def assert_packet(packet: bytes, adapter: MockNetworkAdapter):
 
 @pytest.mark.asyncio
 async def test_send(adapter: MockNetworkAdapter):
-    await stack.send(UDP, src_port=TEST_SRC_PORT, dst_port=TEST_DST_PORT, 
-    dst_ip=TEST_DST_IP, dst_mac=TEST_DST_MAC, data=TEST_PAYLOAD)
+    await stack.send(UDP, src_port=TEST_SRC_PORT, dst_port=TEST_DST_PORT, dst_ip=TEST_DST_IP, dst_mac=TEST_DST_MAC,
+                     data=TEST_PAYLOAD)
     assert_packet(adapter.get_next_packet_nowait(), adapter)
 
 
 @pytest.mark.asyncio
 async def test_handle(adapter: MockNetworkAdapter):
+    ether = Ether(src=TEST_DST_MAC, dst=adapter.mac)
+    ip = IP(src=TEST_DST_IP, dst=adapter.ip)
     udp = SCAPY_UDP(sport=TEST_SRC_PORT, dport=TEST_DST_PORT)
-    packet = udp / TEST_PAYLOAD
-    description = {'src_ip': adapter.ip, 'dst_ip': TEST_DST_IP}
+    packet = ether / ip / udp / TEST_PAYLOAD
 
     stack.get_protocol(UDP).open_port(TEST_DST_PORT)
-    await stack.get_protocol(UDP).handle(packet.build(), adapter, description)
-    assert await stack.get_protocol(UDP).get_packet(TEST_DST_PORT) == (str(adapter.ip), TEST_SRC_PORT, TEST_PAYLOAD)
+    stack.add_packet(packet.build(), adapter)
+
+    assert await stack.get_protocol(UDP).get_packet(TEST_DST_PORT) == (str(TEST_DST_IP), TEST_SRC_PORT, TEST_PAYLOAD)
     stack.get_protocol(UDP).close_port(TEST_DST_PORT)

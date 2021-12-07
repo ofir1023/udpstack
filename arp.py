@@ -9,6 +9,7 @@ from ipv4 import IPv4
 from arp_table import ARPTable
 import consts
 from ip_utils import IPAddress
+from packet import Packet
 
 
 class ARP(Protocol, MacResolverInterface):
@@ -46,9 +47,8 @@ class ARP(Protocol, MacResolverInterface):
 
         return packet
 
-    async def handle(self, packet: bytes, adapter: NetworkAdapterInterface, packet_description: dict) \
-            -> Optional[Tuple[bytes, int]]:
-        packet_io = BytesIO(packet)
+    async def handle(self, packet: Packet, adapter: NetworkAdapterInterface) -> Optional[int]:
+        packet_io = BytesIO(packet.current_packet)
         header = self.PROTOCOL_STRUCT.unpack(packet_io.read(self.PROTOCOL_STRUCT.size))
         ethernet_id, ipv4_id, mac_length, ip_length, opcode = header
         if ethernet_id != self.ETHERNET_ID \

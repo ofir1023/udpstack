@@ -7,6 +7,7 @@ from route_table import RouteTable
 from ip_utils import IPAddress
 from adapter_interface import NetworkAdapterInterface
 from task_creator import TaskCreator
+from packet import Packet
 
 
 class ProtocolInterface(abc.ABC):
@@ -26,16 +27,14 @@ class ProtocolInterface(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def handle(self, packet: bytes, adapter: NetworkAdapterInterface, packet_description: dict) \
-            -> Optional[Tuple[bytes, int]]:
+    async def handle(self, packet: Packet, adapter: NetworkAdapterInterface) -> Optional[int]:
         """
         handle a packet that contains the given protocol
-        :param packet: the packet, starting from the layer of this protocol
+        :param packet: Packet object representing the packet. use packet.current_packet for buffer starting
+                       with the current layer. you can use packet.get_layer to access previous layers.
+                       if there is more processing to do, add your new layer with packet.add_layer
         :param adapter: the adapter from which the packet was received
-        :param packet_description: information about the packet from lower layers. information inferred in this layer
-                                   should be added to it.
-        :return: if None, stop handling this packet
-                 else, tuple of (packet starting in the next layer, next layer id)
+        :return: the id of the next protocol to process the packet, or None if this packet shouldn't be processed more
         """
         pass
 
@@ -87,15 +86,14 @@ class NetworkStack(TaskCreator):
     def get_protocol(cls, protocol_type: type) -> ProtocolInterface:
         return cls._protocols.get_node(protocol_type).data
 
-    async def _handle_packet(self, packet: bytes, adapter: NetworkAdapterInterface):
+    async def _handle_packet(self, packet_data: bytes, adapter: NetworkAdapterInterface):
         protocol_node = self._protocols.get_node(self._protocols.root)
-        packet_description = {}
+        packet = Packet(packet_data)
         while True:
-            result = await protocol_node.data.handle(packet, adapter, packet_description)
-            if result is None:
+            protocol_id = await protocol_node.data.handle(packet, adapter)
+            if protocol_id is None:
                 # handler decided to dump packet
                 break
-            packet, protocol_id = result
 
             next_protocol_candidates = [node for node in self._protocols.children(protocol_node.identifier)
                                         if node.data.PROTOCOL_ID == protocol_id]

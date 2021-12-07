@@ -8,11 +8,12 @@ from stack import NetworkAdapterInterface
 from protocol import Protocol
 from ethernet import Ethernet
 from utils import calculate_checksum
+from packet import Packet
 
 
 class TTLExceededHandler:
     @abc.abstractmethod
-    async def handle_ttl_exceeded(self, packet: bytes, packet_description: dict):
+    async def handle_ttl_exceeded(self, packet: Packet):
         """
         this function will be called every time a ttl exceeded packet will arrive
         """
@@ -42,9 +43,8 @@ class IPv4(Protocol):
         ip_header = ip_header[:10] + struct.pack('>H', checksum) + ip_header[12:]  # insert real checksum
         return ip_header + packet
 
-    async def handle(self, packet: bytes, adapter: NetworkAdapterInterface, packet_description: dict) \
-            -> Optional[Tuple[bytes, int]]:
-        packet_io = BytesIO(packet)
+    async def handle(self, packet: Packet, adapter: NetworkAdapterInterface) -> Optional[int]:
+        packet_io = BytesIO(packet.current_packet)
         header_data = packet_io.read(self.PROTOCOL_STRUCT.size)
         version_and_header_length, options, total_length, identification, flags_and_fragment_offset, ttl, protocol, header_checksum, src_ip, dst_ip = self.PROTOCOL_STRUCT.unpack(header_data)
 
@@ -64,13 +64,11 @@ class IPv4(Protocol):
         if dst_ip != adapter.ip:
             return None
 
-        packet_description['src_ip'] = src_ip
-        packet_description['dst_ip'] = dst_ip
+        packet.add_layer('ip', {'src': src_ip, 'dst': dst_ip}, packet_io.tell())
 
         if ttl == 0:
             for handler in self._ttl_exceeded_handlers:
-                await handler.handle_ttl_exceeded(packet, packet_description)
+                await handler.handle_ttl_exceeded(packet)
             return None
 
-        payload = packet_io.read(total_length - 20)
-        return payload, protocol
+        return protocol

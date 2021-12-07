@@ -1,13 +1,14 @@
 from typing import Optional, Tuple
 import struct
 from io import BytesIO
+from asyncio import Event
 
 from ip_utils import IPAddress
 from stack import NetworkAdapterInterface
 from protocol import Protocol
 from ipv4 import IPv4
 from utils import calculate_checksum
-from asyncio import Event
+from packet import Packet
 
 
 class PacketQueue:
@@ -49,23 +50,23 @@ class UDP(Protocol):
             calculate_checksum(pseudo_header + packet))
         return udp_header + options['data']
 
-    async def handle(self, packet: bytes, adapter: NetworkAdapterInterface, packet_description: dict) \
-            -> Optional[Tuple[bytes, int]]:
-        packet_io = BytesIO(packet)
+    async def handle(self, packet: Packet, adapter: NetworkAdapterInterface) -> Optional[int]:
+        packet_io = BytesIO(packet.current_packet)
 
         src_port, dst_port, length, checksum = self.PROTOCOL_STRUCT.unpack(packet_io.read(self.PROTOCOL_STRUCT.size))
         data = packet_io.read(length)
 
         # pseudo header for checksum
+        ip_layer = packet.get_layer('ip')
         pseudo_header = self.PSEUDO_HEADER_STRUCT.pack(
-            int(IPAddress(packet_description['src_ip'])), int(IPAddress(packet_description['dst_ip'])), 
+            int(ip_layer.attributes['src']), int(ip_layer.attributes['dst']),
             0, self.PROTOCOL_ID, length, src_port, dst_port, length, 0)
 
         if checksum != 0 and checksum != calculate_checksum(pseudo_header + data):
             return None
 
         if dst_port in self.queues.keys():
-            self.queues[dst_port].append((str(packet_description['src_ip']), src_port, data))
+            self.queues[dst_port].append((str(ip_layer.attributes['src']), src_port, data))
         else:
             # TODO: icmp unreachable?
             return None
