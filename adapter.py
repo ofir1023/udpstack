@@ -1,7 +1,10 @@
+import abc
 from sniffer import Sniffer
 from task_creator import TaskCreator
 from stack import stack
-
+from adapter_interface import NetworkAdapterInterface
+from ip_utils import IPAddress
+from typing import Optional
 
 class TaskNetworkAdapter(NetworkAdapterInterface, TaskCreator):
     def __init__(self):
