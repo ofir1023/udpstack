@@ -1,4 +1,4 @@
-from scapy.all import Ether, IP, Padding
+from scapy.all import Ether, IP, Raw
 from scapy.all import UDP as SCAPY_UDP
 import pytest
 
@@ -19,7 +19,7 @@ TEST_DST_PORT = 1337
 
 def assert_packet(packet: bytes, adapter: MockNetworkAdapter):
     packet = Ether(packet)
-    assert packet.layers() == [Ether, IP, SCAPY_UDP, Padding]
+    assert packet.layers() == [Ether, IP, SCAPY_UDP, Raw]
 
     ether = packet.getlayer(Ether)
     assert ether.src == adapter.mac

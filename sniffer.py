@@ -9,7 +9,7 @@ class Sniffer:
 
     def __init__(self, device: str):
         self.sock = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(self.ETH_P_ALL))
-        self.sock.bind(device)
+        self.sock.bind((device, 0))
         self.loop = asyncio.get_event_loop()
 
     async def recv(self, size: int):

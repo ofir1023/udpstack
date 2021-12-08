@@ -62,7 +62,7 @@ class ARP(Protocol, MacResolverInterface):
         dst_mac = Ethernet.parse_mac(packet_io.read(Ethernet.MAC_LENGTH))
         dst_ip = IPAddress(packet_io.read(IPAddress.ADDRESS_LENGTH))
 
-        if dst_ip != adapter.ip or not Ethernet.relevant_mac(adapter, dst_mac):
+        if dst_ip != adapter.ip or (not Ethernet.relevant_mac(adapter, dst_mac) and dst_mac != '00:00:00:00:00:00'):
             return None
 
         self.add_arp_entry(adapter, src_ip, src_mac)

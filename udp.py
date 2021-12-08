@@ -43,11 +43,11 @@ class UDP(Protocol):
         # pseudo header for checksum
         pseudo_header = self.PSEUDO_HEADER_STRUCT.pack(
             int(adapter.ip), int(IPAddress(options['dst_ip'])), 0, self.PROTOCOL_ID,
-            self.PROTOCOL_STRUCT.size + len(packet), options['src_port'], options['dst_port'],
-            self.PROTOCOL_STRUCT.size + len(packet), 0)
+            self.PROTOCOL_STRUCT.size + len(options['data']), options['src_port'], options['dst_port'],
+            self.PROTOCOL_STRUCT.size + len(options['data']), 0)
         udp_header = self.PROTOCOL_STRUCT.pack(
-            options['src_port'], options['dst_port'], len(packet), 
-            calculate_checksum(pseudo_header + packet))
+            options['src_port'], options['dst_port'], self.PROTOCOL_STRUCT.size + len(options['data']), 
+            calculate_checksum(pseudo_header + options['data']))
         return udp_header + options['data']
 
     async def handle(self, packet: Packet, adapter: NetworkAdapterInterface) -> Optional[int]:
@@ -69,7 +69,7 @@ class UDP(Protocol):
             self.queues[dst_port].append((str(ip_layer.attributes['src']), src_port, data))
         else:
             # TODO: icmp unreachable?
-            return None
+            pass
 
         return None
 

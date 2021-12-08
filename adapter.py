@@ -14,9 +14,9 @@ class TaskNetworkAdapter(NetworkAdapterInterface, TaskCreator):
         self.create_task(self.handle_packets())
 
     async def handle_packets(self):
-        while True:
-            packet = await self.get_packet()
-            stack.add_packet(packet, self)
+        packet = await self.get_packet()
+        stack.add_packet(packet, self)
+        self.create_task(self.handle_packets())
 
     @abc.abstractmethod
     async def get_packet(self):
