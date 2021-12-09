@@ -4,11 +4,12 @@ from io import BytesIO
 from asyncio import Event
 
 from ip_utils import IPAddress
-from stack import NetworkAdapterInterface
+from stack import NetworkAdapterInterface, stack
 from protocol import Protocol
 from ipv4 import IPv4
 from utils import calculate_checksum
 from packet import Packet
+from icmp import ICMP, ICMPCodes
 
 
 class PacketQueue:
@@ -35,6 +36,7 @@ class UDP(Protocol):
     PROTOCOL_ID = 0x11
     PROTOCOL_STRUCT = struct.Struct('>HHHH')
     PSEUDO_HEADER_STRUCT = struct.Struct('>IIBBHHHHH')
+    PORT_UNREACHABLE = 3
 
     def __init__(self):
         self.queues = {}
@@ -68,8 +70,8 @@ class UDP(Protocol):
         if dst_port in self.queues.keys():
             self.queues[dst_port].append((str(ip_layer.attributes['src']), src_port, data))
         else:
-            # TODO: icmp unreachable?
-            pass
+            await stack.send(ICMP, dst_ip=ip_layer.attributes['src'], icmp_type=ICMPCodes.DESTINATION_UNREACHABLE,
+                             unreachable_code=self.PORT_UNREACHABLE, error_packet=ip_layer.data + packet.current_packet)
 
         return None
 
