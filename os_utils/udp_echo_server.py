@@ -10,7 +10,6 @@ class UDPEchoServer:
     os.system('ip link set tap2 netns udp_echo_server_ns')
     os.system(f'ip link set dev {adapter_name} up')
     os.system('ip netns exec udp_echo_server_ns ip link set dev tap2 up')
-    # os.system(f'ip addr add {adapter_ip}/24 dev {adapter_name}')
     os.system(f'ip link set dev {adapter_name} address {adapter_mac}')
     os.system(f'ip netns exec udp_echo_server_ns ip addr add {server_ip}/24 dev tap2')
     os.system('ip netns exec udp_echo_server_ns ethtool --offload tap2 rx off tx off')
