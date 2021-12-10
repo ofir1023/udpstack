@@ -4,14 +4,14 @@ import time
 import psutil
 
 class UDPEchoServer:
-  def __init__(self, adapter_name: str, adapter_ip: str, server_ip: str, server_port: int):
+  def __init__(self, adapter_name: str, adapter_mac: str, server_ip: str, server_port: int):
     os.system('ip netns add udp_echo_server_ns')
     os.system(f'ip link add {adapter_name} type veth peer name tap2')
     os.system('ip link set tap2 netns udp_echo_server_ns')
     os.system(f'ip link set dev {adapter_name} up')
     os.system('ip netns exec udp_echo_server_ns ip link set dev tap2 up')
     # os.system(f'ip addr add {adapter_ip}/24 dev {adapter_name}')
-    os.system(f'ip link set dev {adapter_name} address aa:bb:cc:dd:ee:ff')
+    os.system(f'ip link set dev {adapter_name} address {adapter_mac}')
     os.system(f'ip netns exec udp_echo_server_ns ip addr add {server_ip}/24 dev tap2')
     os.system('ip netns exec udp_echo_server_ns ethtool --offload tap2 rx off tx off')
     os.system('ip netns exec udp_echo_server_ns ethtool -K tap2 gso off')

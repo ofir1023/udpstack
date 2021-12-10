@@ -1,5 +1,5 @@
 import abc
-from sniffer import Sniffer
+from os_utils.sniffer import Sniffer
 from task_creator import TaskCreator
 from stack import stack
 from adapter_interface import NetworkAdapterInterface
