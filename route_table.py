@@ -45,7 +45,7 @@ class RouteTable:
         for entry in self._entries:
             if entry.adapter.ip == ip:
                 return entry.adapter
-        raise Exception(f"Adapter for {src_ip} wasn't found")
+        raise Exception(f"Adapter for {ip} wasn't found")
 
     def add_static_route(self, entry: RouteEntry):
         self._entries.append(entry)
