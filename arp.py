@@ -1,8 +1,8 @@
-from typing import Optional, Tuple
+from typing import Optional
 import struct
 from io import BytesIO
 
-from stack import NetworkAdapterInterface, ProtocolInterface, stack
+from stack import NetworkAdapterInterface, stack
 from protocol import Protocol
 from ethernet import Ethernet, MacResolverInterface
 from ipv4 import IPv4
