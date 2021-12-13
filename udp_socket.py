@@ -8,6 +8,7 @@ from ip_utils import IPAddress
 
 class UDPSocket:
     def __init__(self):
+        self.src_ip = None
         self.src_adapter = None
         self.src_port = None
         self.dst_ip = None
@@ -29,18 +30,20 @@ class UDPSocket:
 
         if src_ip and src_ip != '0.0.0.0':
             self.src_adapter = stack.get_adapter(src_ip)
+            self.src_ip = src_ip
 
         if src_port == 0:
             src_port = random.randint(1, 65535)
             while True:
                 try:
-                    stack.get_protocol(UDP).open_port(src_port)
+                    stack.get_protocol(UDP).open_port(src_ip, src_port)
                     break
                 except:
                     src_port = random.randint(1, 65535)
                 
         else:
-            stack.get_protocol(UDP).open_port(src_port)
+            stack.get_protocol(UDP).open_port(src_ip, src_port)
+            self.src_ip = src_ip
                 
         self.src_port = src_port
 
@@ -84,7 +87,7 @@ class UDPSocket:
         if self.src_port is None:
             raise Exception("cannot receive on an unbound socket")
 
-        packet = await stack.get_protocol(UDP).get_packet(self.src_port)
+        packet = await stack.get_protocol(UDP).get_packet(self.src_ip, self.src_port)
         packet = (packet[0], packet[1], packet[2][:buffer_size])
         return packet
 
@@ -95,5 +98,5 @@ class UDPSocket:
         self.closed = True
 
         if self.src_port:
-            stack.get_protocol(UDP).close_port(self.src_port)
+            stack.get_protocol(UDP).close_port(self.src_ip, self.src_port)
             self.src_port = None

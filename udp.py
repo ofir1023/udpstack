@@ -45,11 +45,11 @@ class UDP(Protocol):
         # pseudo header for checksum
         pseudo_header = self.PSEUDO_HEADER_STRUCT.pack(
             int(adapter.ip), int(IPAddress(options['dst_ip'])), 0, self.PROTOCOL_ID,
-            self.PROTOCOL_STRUCT.size + len(packet), options['src_port'], options['dst_port'],
-            self.PROTOCOL_STRUCT.size + len(packet), 0)
+            self.PROTOCOL_STRUCT.size + len(options['data']), options['src_port'], options['dst_port'],
+            self.PROTOCOL_STRUCT.size + len(options['data']), 0)
         udp_header = self.PROTOCOL_STRUCT.pack(
-            options['src_port'], options['dst_port'], len(packet), 
-            calculate_checksum(pseudo_header + packet))
+            options['src_port'], options['dst_port'], self.PROTOCOL_STRUCT.size + len(options['data']), 
+            calculate_checksum(pseudo_header + options['data']))
         return udp_header + options['data']
 
     async def handle(self, packet: Packet, adapter: NetworkAdapterInterface) -> Optional[int]:
@@ -67,32 +67,33 @@ class UDP(Protocol):
         if checksum != 0 and checksum != calculate_checksum(pseudo_header + data):
             return None
 
-        if dst_port in self.queues.keys():
-            self.queues[dst_port].append((str(ip_layer.attributes['src']), src_port, data))
+        if (str(ip_layer.attributes['dst']), dst_port) in self.queues.keys():
+            self.queues[(str(ip_layer.attributes['dst']), dst_port)].append((str(ip_layer.attributes['src']), src_port, data))
+        elif (None, dst_port) in self.queues.keys():
+            self.queues[(None, dst_port)].append((str(ip_layer.attributes['src']), src_port, data))
         else:
             await stack.send(ICMP, dst_ip=ip_layer.attributes['src'], icmp_type=ICMPCodes.DESTINATION_UNREACHABLE,
                              unreachable_code=self.PORT_UNREACHABLE, error_packet=ip_layer.data + packet.current_packet)
-            return None
 
         return None
 
-    def open_port(self, port: int):
-        if port in self.queues.keys():
+    def open_port(self, ip: str, port: int):
+        if (None, port) in self.queues.keys() or (ip, port) in self.queues.keys():
             raise Exception(f"port {port} is already open")
 
-        self.queues[port] = PacketQueue()
+        self.queues[(ip, port)] = PacketQueue()
 
-    def close_port(self, port: int):
-        self.queues.pop(port, None)
+    def close_port(self, ip: str, port: int):
+        self.queues.pop((ip, port), None)
 
-    async def get_packet(self, port: int):
-        if port not in self.queues.keys():
+    async def get_packet(self, ip: str, port: int):
+        if (ip, port) not in self.queues.keys():
             raise Exception(f"port {port} is not open")
 
         # check if there is available packet to consume
-        data = self.queues[port].pop()
+        data = self.queues[(ip, port)].pop()
         if data is not None:
             return data
 
         # if no available packet, then wait for packet to arrive
-        return await self.queues[port].wait_for_packet()
+        return await self.queues[(ip, port)].wait_for_packet()

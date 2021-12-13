@@ -1,4 +1,4 @@
-from scapy.all import Ether, IP, Padding, ICMP, IPerror, UDPerror
+from scapy.all import Ether, IP, Raw,  ICMP, IPerror, UDPerror
 from scapy.all import UDP as SCAPY_UDP
 import pytest
 
@@ -20,7 +20,7 @@ TEST_DST_PORT = 1337
 
 def assert_packet(packet: bytes, adapter: MockNetworkAdapter):
     packet = Ether(packet)
-    assert packet.layers() == [Ether, IP, SCAPY_UDP, Padding]
+    assert packet.layers() == [Ether, IP, SCAPY_UDP, Raw]
 
     ether = packet.getlayer(Ether)
     assert ether.src == adapter.mac
@@ -53,11 +53,11 @@ async def test_send(adapter: MockNetworkAdapter):
 
 @pytest.mark.asyncio
 async def test_handle(adapter: MockNetworkAdapter):
-    stack.get_protocol(UDP).open_port(TEST_DST_PORT)
+    stack.get_protocol(UDP).open_port(str(adapter.ip), TEST_DST_PORT)
     stack.add_packet(build_udp_packet(adapter), adapter)
 
-    assert await stack.get_protocol(UDP).get_packet(TEST_DST_PORT) == (str(TEST_DST_IP), TEST_SRC_PORT, TEST_PAYLOAD)
-    stack.get_protocol(UDP).close_port(TEST_DST_PORT)
+    assert await stack.get_protocol(UDP).get_packet(str(adapter.ip), TEST_DST_PORT) == (str(TEST_DST_IP), TEST_SRC_PORT, TEST_PAYLOAD)
+    stack.get_protocol(UDP).close_port(str(adapter.ip), TEST_DST_PORT)
 
 
 @pytest.mark.asyncio

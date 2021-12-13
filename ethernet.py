@@ -63,8 +63,10 @@ class Ethernet(Protocol):
             -> Optional[Tuple[bytes, int]]:
         data = packet.current_packet
         dst_mac = self.parse_mac(data[:self.MAC_LENGTH])
+
         if not self.relevant_mac(adapter, dst_mac):
             return None
+
         src_mac = self.parse_mac(data[self.MAC_LENGTH:self.MAC_LENGTH*2])
         protocol_id_start = 2 * self.MAC_LENGTH
         protocol_id_bytes = data[protocol_id_start:protocol_id_start + self._PROTOCOL_ID_STRUCT.size]

@@ -27,6 +27,7 @@ class IPv4(Protocol):
     HEADER_LENGTH = 5
     TTL = 128
     PROTOCOL_STRUCT = struct.Struct('>BBHHHBBHII')
+    DF_FLAG = 0x4000
 
     def __init__(self):
         self._ttl_exceeded_handlers = []  # type: List[TTLExceededHandler]
@@ -55,7 +56,7 @@ class IPv4(Protocol):
         # support only basic IP header, with no options or fragmentation
         if version_and_header_length != (self.VERSION << 4) + self.HEADER_LENGTH \
                 or options != 0 \
-                or flags_and_fragment_offset != 0:
+                or (flags_and_fragment_offset != 0 and flags_and_fragment_offset != self.DF_FLAG):
             return None
 
         src_ip = IPAddress(src_ip)
