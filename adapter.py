@@ -6,6 +6,7 @@ from adapter_interface import NetworkAdapterInterface
 from ip_utils import IPAddress
 from typing import Optional
 
+
 class TaskNetworkAdapter(NetworkAdapterInterface, TaskCreator):
     def __init__(self):
         super().__init__()

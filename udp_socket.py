@@ -2,11 +2,13 @@ import random
 from typing import Optional
 
 from stack import stack
-from udp import UDP
+from udp import UDP, PortAlreadyOpenedException
 from ip_utils import IPAddress
 
 
 class UDPSocket:
+    BIND_TRIES = 1000
+
     def __init__(self):
         self.src_ip = None
         self.src_adapter = None
@@ -34,11 +36,11 @@ class UDPSocket:
 
         if src_port == 0:
             src_port = random.randint(1, 65535)
-            while True:
+            for _ in range(self.BIND_TRIES):
                 try:
                     stack.get_protocol(UDP).open_port(src_ip, src_port)
                     break
-                except:
+                except PortAlreadyOpenedException:
                     src_port = random.randint(1, 65535)
                 
         else:

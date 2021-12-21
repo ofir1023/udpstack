@@ -12,6 +12,10 @@ from packet import Packet
 from icmp import ICMP, ICMPCodes
 
 
+class PortAlreadyOpenedException(Exception):
+    pass
+
+
 class PacketQueue:
     def __init__(self):
         self._queue = []
@@ -79,7 +83,7 @@ class UDP(Protocol):
 
     def open_port(self, ip: str, port: int):
         if (None, port) in self.queues.keys() or (ip, port) in self.queues.keys():
-            raise Exception(f"port {port} is already open")
+            raise PortAlreadyOpenedException(f"port {port} is already open")
 
         self.queues[(ip, port)] = PacketQueue()
 
