@@ -5,7 +5,7 @@ from io import BytesIO
 from stack import NetworkAdapterInterface, stack
 from protocol import Protocol
 from ethernet import Ethernet, MacResolverInterface
-from ipv4 import IPv4
+from consts import IPV4_PROTOCOL_ID
 from arp_table import ARPTable
 import consts
 from ip_utils import IPAddress
@@ -38,7 +38,7 @@ class ARP(Protocol, MacResolverInterface):
             dst_mac = consts.BROADCAST_MAC
         options['dst_mac'] = dst_mac  # hint for ethernet layer
 
-        packet += self.PROTOCOL_STRUCT.pack(self.ETHERNET_ID, IPv4.PROTOCOL_ID, Ethernet.MAC_LENGTH,
+        packet += self.PROTOCOL_STRUCT.pack(self.ETHERNET_ID, IPV4_PROTOCOL_ID, Ethernet.MAC_LENGTH,
                                             IPAddress.ADDRESS_LENGTH, arp_opcode)
         packet += Ethernet.build_mac(adapter.mac)
         packet += bytes(adapter.ip)
@@ -52,7 +52,7 @@ class ARP(Protocol, MacResolverInterface):
         header = self.PROTOCOL_STRUCT.unpack(packet_io.read(self.PROTOCOL_STRUCT.size))
         ethernet_id, ipv4_id, mac_length, ip_length, opcode = header
         if ethernet_id != self.ETHERNET_ID \
-                or ipv4_id != IPv4.PROTOCOL_ID \
+                or ipv4_id != IPV4_PROTOCOL_ID \
                 or mac_length != Ethernet.MAC_LENGTH \
                 or ip_length != IPAddress.ADDRESS_LENGTH:
             return None
@@ -74,6 +74,9 @@ class ARP(Protocol, MacResolverInterface):
         return self._arp_tables.setdefault(adapter, ARPTable())
 
     def add_arp_entry(self, adapter: NetworkAdapterInterface, src_ip: IPAddress, src_mac: str):
+        """
+        Add entry to arp table
+        """
         self._arp_tables.setdefault(adapter, ARPTable()).update(src_ip, src_mac)
 
     async def get_mac(self, adapter: NetworkAdapterInterface, dst_ip: IPAddress) -> str:
@@ -84,5 +87,5 @@ class ARP(Protocol, MacResolverInterface):
             return result
 
         # we got a coroutine, which means there's no available mac for this ip. send arp request and wait for the result
-        await stack.send(ARP, arp_opcode=self.REQUEST_OPCODE, dst_ip=dst_ip, expected_adapter=adapter)
+        await stack.send(ARP, arp_opcode=ARP.REQUEST_OPCODE, dst_ip=dst_ip, expected_adapter=adapter)
         return await result

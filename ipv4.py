@@ -9,6 +9,10 @@ from protocol import Protocol
 from ethernet import Ethernet
 from utils import calculate_checksum
 from packet import Packet
+from consts import IPV4_PROTOCOL_ID
+
+# This will add arp to the stack
+import arp
 
 
 class TTLExceededHandler:
@@ -22,7 +26,7 @@ class TTLExceededHandler:
 
 class IPv4(Protocol):
     NEXT_PROTOCOL = Ethernet
-    PROTOCOL_ID = 0x800
+    PROTOCOL_ID = IPV4_PROTOCOL_ID
     VERSION = 4
     HEADER_LENGTH = 5
     TTL = 128
