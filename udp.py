@@ -82,15 +82,24 @@ class UDP(Protocol):
         return None
 
     def open_port(self, ip: str, port: int):
+        """
+        Mark the (ip, port) as open and expects packets
+        """
         if (None, port) in self.queues.keys() or (ip, port) in self.queues.keys():
             raise PortAlreadyOpenedException(f"port {port} is already open")
 
         self.queues[(ip, port)] = PacketQueue()
 
     def close_port(self, ip: str, port: int):
+        """
+        Mark the (ip, port) as closed. We will not expect packets in this port anymore
+        """
         self.queues.pop((ip, port), None)
 
     async def get_packet(self, ip: str, port: int):
+        """
+        Get a packet that was sent to the given (ip, port)
+        """
         if (ip, port) not in self.queues.keys():
             raise Exception(f"port {port} is not open")
 

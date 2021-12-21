@@ -37,9 +37,16 @@ class ARPTable:
         return self.table.setdefault(str(ip), ARPEntry())
 
     def update(self, ip: IPAddress, mac: str):
+        """
+        Update the given ip to be mapped to the given mac
+        """
         self._get_entry(ip).update(mac)
 
     def get_mac(self, ip: IPAddress):
+        """
+        Get the mac corresponding to the given ip
+        Returns the mac if available, or coroutine
+        """
         entry = self._get_entry(ip)
         mac = entry.get_mac()
         if mac is not None:

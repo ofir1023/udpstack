@@ -35,6 +35,9 @@ class RouteTable:
         self._entries = []  # type: List[RouteEntry]
 
     def add_adapter(self, adapter: NetworkAdapterInterface):
+        """
+        Add the routes relevant to this adapter to the stack
+        """
         if adapter.gateway is not None:
             assert adapter.gateway.in_network(adapter.ip, adapter.netmask), 'gateway must be in LAN'
             # if the adapter has gateway anything can be route through it
@@ -42,12 +45,18 @@ class RouteTable:
         self._entries.append(RouteEntry(adapter, adapter.ip, adapter.netmask))
 
     def get_adapter(self, ip: str) -> NetworkAdapterInterface:
+        """
+        Finds the adapter that should be used to route to the given ip
+        """
         for entry in self._entries:
             if entry.adapter.ip == ip:
                 return entry.adapter
         raise Exception(f"Adapter for {ip} wasn't found")
 
     def add_static_route(self, entry: RouteEntry):
+        """
+        Add a static route. This should be used to add a route that's not a natural route of the adapter
+        """
         self._entries.append(entry)
 
     def route(self, ip: IPAddress) -> Tuple[NetworkAdapterInterface, Optional[IPAddress]]:

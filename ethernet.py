@@ -78,4 +78,7 @@ class Ethernet(Protocol):
 
     @staticmethod
     def relevant_mac(adapter: NetworkAdapterInterface, mac: str):
+        """
+        Returns true if the a packet with the given mac as destination mac is relevant to the given adapter
+        """
         return mac == adapter.mac or mac == consts.BROADCAST_MAC

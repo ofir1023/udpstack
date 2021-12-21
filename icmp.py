@@ -31,12 +31,21 @@ class ICMP(Protocol, TTLExceededHandler):
         stack.get_protocol(IPv4).register_to_ttl_exceeded_callback(self)
 
     async def handle_ttl_exceeded(self, packet: Packet):
+        """
+        Handle the fact that we get a packet with 0 as ttl.
+        Sends and "ttl-exceeded" icmp error packet as response.
+        This response packet has the data from ip layer and up and the error_packet, so get that information from the
+        incoming packet.
+        """
         ip = packet.get_layer('ip')
         await stack.send(ICMP, dst_ip=ip.attributes['src'], icmp_type=ICMPCodes.TTL_EXCEEDED,
                          error_packet=ip.data + packet.current_packet)
 
     @staticmethod
     def _pack(type: ICMPCodes, code: int, data: bytes):
+        """
+        Creates an ICMP packet header and concatenates the given data to it
+        """
         no_checksum = ICMP.HEADER_STRUCT.pack(type.value, code, 0) + data
         checksum = calculate_checksum(no_checksum)
         return ICMP.HEADER_STRUCT.pack(type.value, code, checksum) + data

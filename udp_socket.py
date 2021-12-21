@@ -24,6 +24,12 @@ class UDPSocket:
         self.close()
 
     def bind(self, src_ip: Optional[str], src_port: int):
+        """
+        Bind the socket to the given ip and port
+        This means that every packet will be sent from this ip and port
+        Can be called with src_ip=None to bind on all adapters.
+        Can be called with src_port=0 and this function will find an open port to bind on.
+        """
         if self.closed:
             raise Exception("socket is closed")
 
@@ -50,6 +56,10 @@ class UDPSocket:
         self.src_port = src_port
 
     def connect(self, dst_ip: str, dst_port: int):
+        """
+        Mark the given ip and port as destinations of this socket.
+        From now, `send` can be used and not only `sento`
+        """
         if self.closed:
             raise Exception("socket is closed")
 
@@ -57,6 +67,9 @@ class UDPSocket:
         self.dst_port = dst_port
 
     async def send(self, data):
+        """
+        Send the data to the destination. `connect` should be used before this function to mark the destination.
+        """
         if self.closed:
             raise Exception("socket is closed")
 
@@ -70,6 +83,9 @@ class UDPSocket:
                          data=data, expected_adapter=self.src_adapter)
 
     async def sendto(self, data, dst_ip: str, dst_port: int):
+        """
+        Send the given data to the given ip and port
+        """
         if self.closed:
             raise Exception("socket is closed")
 
@@ -78,11 +94,19 @@ class UDPSocket:
 
         return stack.send(UDP, src_port=self.src_port, dst_port=dst_port, dst_ip=dst_ip, data=data)
     
-    async def recv(self, buffer_size):
-        packet = await self.recvfrom(buffer_size)
+    async def recv(self):
+        """
+        Recv the next packet sent to this socket. `bind` should be called before to mark what port and ip should
+        be the destination of the returned packet
+        """
+        packet = await self.recvfrom()
         return packet[2]
 
-    async def recvfrom(self, buffer_size):
+    async def recvfrom(self):
+        """
+        See `recv` documentation. This function also returns the information of the sender.
+        Returns a tuple of (source ip, source port, packet data)
+        """
         if self.closed:
             raise Exception("socket is closed")
 
@@ -90,10 +114,13 @@ class UDPSocket:
             raise Exception("cannot receive on an unbound socket")
 
         packet = await stack.get_protocol(UDP).get_packet(self.src_ip, self.src_port)
-        packet = (packet[0], packet[1], packet[2][:buffer_size])
+        packet = (packet[0], packet[1], packet[2])
         return packet
 
     def close(self):
+        """
+        Close the socket and stop listening on the port we listened on.
+        """
         if self.closed:
             return
 

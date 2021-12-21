@@ -1,7 +1,6 @@
 import pytest
-from adapter import SnifferNetworkAdapter
+from os_utils.sniffer_adapter import SnifferNetworkAdapter
 from udp_socket import UDPSocket
-import arp
 from ip_utils import IPAddress
 
 TEST_DST_IP = IPAddress('1.1.1.2')
@@ -14,11 +13,9 @@ TEST_DST_PORT = 1234
 
 @pytest.mark.asyncio
 async def test_echo_server(sniffer_adapter: SnifferNetworkAdapter):
-    sniffer_adapter.start()
-    s = UDPSocket()
-    s.bind(None, TEST_SRC_PORT)
-    s.connect(str(TEST_DST_IP), TEST_DST_PORT)
-    await s.send(TEST_PAYLOAD)
-    data = await s.recv(len(TEST_PAYLOAD))
-    assert data == TEST_PAYLOAD
-    s.close()
+    with UDPSocket() as s:
+        s.bind(None, TEST_SRC_PORT)
+        s.connect(str(TEST_DST_IP), TEST_DST_PORT)
+        await s.send(TEST_PAYLOAD)
+        data = await s.recv()
+        assert data == TEST_PAYLOAD
