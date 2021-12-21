@@ -1,10 +1,8 @@
 import pytest
 from adapter import SnifferNetworkAdapter
-from stack import stack
 from udp_socket import UDPSocket
 import arp
 from ip_utils import IPAddress
-from conftest import sniffer_adapter
 
 TEST_DST_IP = IPAddress('1.1.1.2')
 TEST_DST_MAC = 'aa:aa:aa:aa:aa:aa'
@@ -12,6 +10,7 @@ TEST_PREVIOUS_ID = 123
 TEST_PAYLOAD = b'abcde'
 TEST_SRC_PORT = 1337
 TEST_DST_PORT = 1234
+
 
 @pytest.mark.asyncio
 async def test_echo_server(sniffer_adapter: SnifferNetworkAdapter):
