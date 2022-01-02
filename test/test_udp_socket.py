@@ -64,7 +64,7 @@ async def test_recv(adapter: MockNetworkAdapter):
     packet = ether / ip / udp / TEST_PAYLOAD
     stack.add_packet(packet.build(), adapter)
 
-    assert await s.recv(len(TEST_PAYLOAD)) == TEST_PAYLOAD
+    assert await s.recv() == TEST_PAYLOAD
     s.close()
 
 
