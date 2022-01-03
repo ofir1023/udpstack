@@ -1,7 +1,5 @@
 import asyncio
 import socket
-from scapy.all import Packet
-from typing import Union
 
 
 class Sniffer:
@@ -15,7 +13,5 @@ class Sniffer:
     async def recv(self, size: int):
         return await self.loop.sock_recv(self.sock, size)
 
-    async def send(self, data: Union[bytes, Packet]):
-        if isinstance(data, Packet):
-            data = data.build()
+    async def send(self, data: bytes):
         await self.loop.sock_sendall(self.sock, data)

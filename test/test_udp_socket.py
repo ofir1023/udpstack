@@ -106,7 +106,7 @@ async def test_send_without_bind(adapter: MockNetworkAdapter):
 async def test_recv_without_bind(adapter: MockNetworkAdapter):
     s = UDPSocket()
     try:
-        await s.recv(len(TEST_PAYLOAD))
+        await s.recv()
         assert False, "an exception should have been thrown"
     except:
         pass
